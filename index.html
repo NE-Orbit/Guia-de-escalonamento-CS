@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Escalonamento — CS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F1EFE8;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1A1A18;
+    --text2: #5F5E5A;
+    --text3: #9C9B95;
+    --teal: #1D9E75;
+    --teal-bg: #E1F5EE;
+    --teal-text: #085041;
+    --amber: #BA7517;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --gray-bg: #F1EFE8;
+    --gray-text: #2C2C2A;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--text);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { color: white; }
+
+  .header-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .main {
+    flex: 1;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  .step { display: none; animation: fadeIn .18s ease; }
+  .step.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-intro {
+    margin-bottom: 24px;
+  }
+
+  .step-eyebrow {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .step-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
+  .step-hint {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+
+  .search-wrap input:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(29,158,117,.1);
+  }
+
+  .search-wrap input::placeholder { color: var(--text3); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--text3);
+    pointer-events: none;
+  }
+
+  .cats-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  .cat-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cat-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s;
+  }
+
+  .cat-head:hover { background: var(--surface2); }
+
+  .cat-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cat-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .cat-count {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  .cat-arr {
+    width: 16px;
+    height: 16px;
+    color: var(--text3);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+
+  .cat-arr.open { transform: rotate(90deg); }
+
+  .cat-items { display: none; flex-direction: column; }
+  .cat-items.open { display: flex; }
+
+  .topic-btn {
+    text-align: left;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 11px 16px 11px 36px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    transition: background .1s;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .topic-btn:hover { background: var(--surface2); }
+
+  .topic-arrow {
+    width: 14px;
+    height: 14px;
+    color: var(--text3);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+
+  .topic-btn:hover .topic-arrow { opacity: 1; }
+
+  .no-res {
+    padding: 40px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text3);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .back-btn {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 7px 12px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background .12s, color .12s;
+    flex-shrink: 0;
+  }
+
+  .back-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .progress {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 2px;
+    transition: width .35s ease;
+  }
+
+  .step-label {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+
+  .ctx-options { display: flex; flex-direction: column; gap: 8px; }
+
+  .ctx-opt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: background .1s, border-color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ctx-opt:hover {
+    background: var(--surface2);
+    border-color: var(--border2);
+  }
+
+  .result-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .result-top {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .res-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+
+  .res-sim { background: var(--teal-bg); color: var(--teal-text); }
+  .res-nao { background: var(--gray-bg); color: var(--gray-text); }
+  .res-dep { background: var(--amber-bg); color: var(--amber-text); }
+
+  .res-topic {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .res-cat {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .result-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+  .res-section {}
+
+  .res-label {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 6px;
+  }
+
+  .res-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  .res-obs {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.55;
+    padding: 12px 14px;
+    background: var(--amber-bg);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--amber);
+    color: var(--amber-text);
+  }
+
+  .result-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    background: var(--surface2);
+  }
+
+  .btn-new {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background .12s;
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .btn-primary {
+    background: var(--text);
+    border: 1px solid var(--text);
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity .12s;
+  }
+
+  .btn-primary:hover { opacity: .85; }
+
+  .action-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 0;
+  }
+
+  .action-sim { background: var(--teal-bg); }
+  .action-nao { background: var(--gray-bg); }
+
+  .action-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .action-sim .action-icon { background: rgba(29,158,117,.15); color: var(--teal-text); }
+  .action-nao .action-icon { background: rgba(95,94,90,.12); color: var(--gray-text); }
+
+  .action-body {}
+  .action-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .action-sim .action-title { color: var(--teal-text); }
+  .action-nao .action-title { color: var(--gray-text); }
+  .action-desc { font-size: 12px; color: var(--text2); }
+
+  footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  @media (max-width: 520px) {
+    .main { padding: 20px 14px 48px; }
+    .step-title { font-size: 18px; }
+    header { padding: 12px 16px; }
+    .header-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.8">
+      <path d="M2 8h3l2-5 2 10 2-5h3"/>
+    </svg>
+  </div>
+  <span class="header-title">Guia de Escalonamento — CS</span>
+  <span class="header-sub">Time de Relacionamento</span>
+</header>
+
+<div class="main">
+
+  <!-- Passo 1: tema -->
+  <div class="step active" id="s-topic">
+    <div class="step-intro">
+      <div class="step-eyebrow">Passo 1 de 2</div>
+      <div class="step-title">Qual é o tema do chamado?</div>
+      <div class="step-hint">Busque ou navegue pelas categorias abaixo para selecionar o tema correspondente.</div>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Buscar tema..." oninput="filterTopics()">
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
+    <div class="no-res" id="no-res" style="display:none">Nenhum tema encontrado para essa busca.</div>
+  </div>
+
+  <!-- Passo 2: contexto -->
+  <div class="step" id="s-context">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M7 2L3 6l4 4"/>
+        </svg>
+        Voltar
+      </button>
+      <div class="progress"><div class="progress-fill" style="width:60%"></div></div>
+      <span class="step-label">2 de 2</span>
+    </div>
+    <div class="step-intro">
+      <div class="step-eyebrow">Contexto necessário</div>
+      <div class="step-title" id="ctx-question"></div>
+      <div class="step-hint">Selecione a opção que melhor descreve a situação atual do chamado.</div>
+    </div>
+    <div class="ctx-options" id="ctx-options"></div>
+  </div>
+
+  <!-- Resultado -->
+  <div class="step" id="s-result">
+    <div class="topbar">
+      <button class="back-btn" onclick="restart()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M2 6h8M6 2l4 4-4 4"/>
+        </svg>
+        Novo chamado
+      </button>
+      <div class="progress"><div class="progress-fill" style="width:100%"></div></div>
+      <span class="step-label">Resultado</span>
+    </div>
+    <div class="result-wrap" id="result-wrap"></div>
+  </div>
+
+</div>
+
+<footer>
+  Guia de escalonamento — uso interno &nbsp;·&nbsp; Time de Relacionamento
+</footer>
+
+<script>
+const DATA = [
+  {cat:"Financeiro & Faturamento",color:"#378ADD",topics:[
+    {label:"Solicitação de segunda via da fatura",status:"nao"},
+    {label:"Dúvida de como acessar a fatura no painel",status:"nao"},
+    {label:"Problema para acessar a fatura (erro no download)",status:"sim"},
+    {label:"Negociação de faturas",status:"sim"},
+    {label:"Dúvida sobre os componentes da fatura",status:"dep",
+      question:"O reembolso já está lançado no painel?",
+      opts:[
+        {label:"Sim, já está lançado",result:"nao",obs:"Reembolso já lançado no painel — o próprio time de relacionamento pode resolver."},
+        {label:"Não, ainda não",result:"sim",obs:"Reembolso não lançado — escalar para CS para verificação."}
+      ]},
+    {label:"Solicitação de reembolso",status:"sim"},
+    {label:"Verificação de reembolso",status:"dep",
+      question:"O reembolso já está lançado no painel?",
+      opts:[
+        {label:"Sim, já está lançado",result:"nao",obs:"Reembolso visível no painel — não precisa escalar."},
+        {label:"Não, ainda não",result:"sim",obs:"Reembolso não identificado — escalar para CS."}
+      ]},
+    {label:"Divergência em fatura",status:"sim"},
+    {label:"Dúvidas sobre mensalidade",status:"sim"},
+  ]},
+  {cat:"Painel & Acesso",color:"#7F77DD",topics:[
+    {label:"Desbloqueio de painel",status:"nao"},
+    {label:"Dúvidas sobre o painel",status:"nao"},
+    {label:"Erro ao acessar ou gerar algo no painel",status:"sim"},
+    {label:"Criação de nova conta no painel",status:"sim"},
+    {label:"Adição de conta filho",status:"sim"},
+  ]},
+  {cat:"Integração & Sistema",color:"#D85A30",topics:[
+    {label:"Erros de integração",status:"sim",obs:"Ex: importação de pedido, geração de etiqueta."},
+    {label:"Nova integração",status:"sim"},
+    {label:"Ativação de seguro",status:"sim"},
+    {label:"Problemas no checkout",status:"sim"},
+    {label:"Divergência ou erro no cálculo de frete",status:"sim"},
+    {label:"Dúvida sobre integração",status:"sim",obs:"Ex: ativar webhook, integração com sistemas externos."},
+  ]},
+  {cat:"Fiscal & Jurídico",color:"#1D9E75",topics:[
+    {label:"Dúvidas fiscais (Sefaz, DC-e...)",status:"sim"},
+    {label:"Alteração de CNPJ",status:"sim"},
+    {label:"Dúvidas contratuais",status:"sim"},
+    {label:"Carta de retratação",status:"dep",
+      question:"O time de relacionamento consegue solicitar direto para o BKO?",
+      opts:[
+        {label:"Sim, consegue",result:"nao",obs:"Solicite diretamente ao BKO, sem necessidade de acionar o CS."},
+        {label:"Não, precisa de suporte",result:"sim",obs:"Escalar para CS para encaminhar ao BKO."}
+      ]},
+  ]},
+  {cat:"Logística & Coleta",color:"#BA7517",topics:[
+    {label:"Problema de coleta",status:"dep",
+      question:"Como está o nível de atrito do cliente?",
+      opts:[
+        {label:"Muito atritado — risco de churn",result:"sim",obs:"Cliente com risco de churn — passar para o executivo de conta imediatamente."},
+        {label:"Atrito normal",result:"nao",obs:"Sem risco de churn identificado — o time de relacionamento pode seguir."}
+      ]},
+    {label:"Alteração de endereço de coleta/devolução",status:"sim"},
+    {label:"Alteração no tipo de coleta",status:"sim",obs:"Ex: agendada, sob demanda..."},
+    {label:"Pausa nas coletas",status:"sim"},
+    {label:"Solicitação/cancelamento de coleta",status:"nao"},
+    {label:"Realização de Drop Off",status:"sim"},
+    {label:"Solicitação de Dropoff",status:"sim"},
+    {label:"Bloqueio de transportadora",status:"sim"},
+    {label:"Reclamação de transportadora",status:"sim"},
+  ]},
+  {cat:"Pedidos & Ocorrências",color:"#D4537E",topics:[
+    {label:"Pedido em atraso ou ocorrência",status:"dep",
+      question:"Qual é a situação do cliente?",
+      opts:[
+        {label:"Pedido para evento/viagem urgente",result:"sim",obs:"Escalar para CS para abertura de SS."},
+        {label:"Ameaça de Procon ou Reclame Aqui",result:"sim",obs:"Escalar para CS para abertura de SS."},
+        {label:"Atraso comum, sem urgência",result:"nao",obs:"Tratamento padrão pelo time de relacionamento."}
+      ]},
+    {label:"Troca/avaria de pedido",status:"dep",
+      question:"Como está a sensibilização do cliente?",
+      opts:[
+        {label:"Cliente muito sensibilizado",result:"sim",obs:"Escalar para CS para tratativa especializada."},
+        {label:"Sensibilização normal",result:"nao",obs:"Time de relacionamento pode conduzir a tratativa."}
+      ]},
+    {label:"Pedido extraviado",status:"dep",
+      question:"O cliente entendeu e aceitou a devolutiva?",
+      opts:[
+        {label:"Não entendeu ou não aceitou",result:"sim",obs:"Ex: consta como coletado, mas sem registro no painel — escalar para CS."},
+        {label:"Sim, entendeu e aceitou",result:"nao",obs:"Sem necessidade de escalonamento."}
+      ]},
+  ]},
+  {cat:"Cadastro & Dados",color:"#639922",topics:[
+    {label:"Alteração em dados cadastrais no webapp",status:"dep",
+      question:"Que tipo de dado o cliente quer alterar?",
+      opts:[
+        {label:"Informações cadastrais ou de contato",result:"nao",obs:"O próprio cliente pode alterar esses dados — orientar no autoatendimento."},
+        {label:"Dados que exigem aprovação interna",result:"sim",obs:"Escalar para CS para validação e alteração."}
+      ]},
+  ]},
+  {cat:"Frete & Tabela",color:"#888780",topics:[
+    {label:"Regra de frete",status:"dep",
+      question:"O cliente conseguiu implementar a regra consultando o FAQ?",
+      opts:[
+        {label:"Sim, resolveu pelo FAQ",result:"nao",obs:"Sem necessidade de escalonamento."},
+        {label:"Não, ainda com dificuldade",result:"sim",obs:"Escalar para CS para suporte na implementação da regra."}
+      ]},
+    {label:"Solicitação/negociação de tabela",status:"sim"},
+    {label:"Simulação de frete (MV)",status:"sim"},
+    {label:"Calendário DV3",status:"nao"},
+  ]},
+  {cat:"Relacionamento & Comercial",color:"#534AB7",topics:[
+    {label:"Solicitação de reunião",status:"sim",obs:"Para dúvidas e alinhamentos operacionais."},
+    {label:"Indicação de possível novo cliente",status:"sim"},
+    {label:"Dúvidas/interesse sobre a Nuvemshop",status:"sim"},
+    {label:"Cancelamento de contrato",status:"sim"},
+    {label:"Dúvidas sobre processos internos",status:"dep",
+      question:"Como está a reação do cliente ao processo?",
+      opts:[
+        {label:"Não aceita ou está muito atritado",result:"sim",obs:"Ex: acareação, aceitação de prazos — escalar para CS."},
+        {label:"Está receptivo, só tem dúvidas",result:"nao",obs:"Time de relacionamento pode explicar e conduzir."}
+      ]},
+  ]},
+];
+
+const badgeLabel = {sim:"Escalar para CS",nao:"Não escalar",dep:"Depende do contexto"};
+const actionTitle = {sim:"Escalar para CS",nao:"Resolver internamente"};
+const actionDesc = {
+  sim:"Encaminhe este chamado ao executivo de conta do CS.",
+  nao:"O time de relacionamento pode resolver diretamente."
+};
+
+let selected = {topic:null, catName:null, catColor:null};
+
+function buildGrid(filter) {
+  const grid = document.getElementById("cats-grid");
+  const noRes = document.getElementById("no-res");
+  grid.innerHTML = "";
+  const q = (filter||"").toLowerCase().trim();
+  let any = false;
+
+  DATA.forEach(cat => {
+    const items = cat.topics.filter(t => !q || t.label.toLowerCase().includes(q));
+    if (!items.length) return;
+    any = true;
+
+    const g = document.createElement("div");
+    g.className = "cat-group";
+
+    const h = document.createElement("div");
+    h.className = "cat-head";
+
+    const open = !!q;
+    h.innerHTML = `
+      <div class="cat-dot" style="background:${cat.color}"></div>
+      <span class="cat-name">${cat.cat}</span>
+      <span class="cat-count">${items.length}</span>
+      <svg class="cat-arr ${open?'open':''}" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 2l4 4-4 4"/>
+      </svg>
+    `;
+
+    const body = document.createElement("div");
+    body.className = "cat-items" + (open ? " open" : "");
+
+    items.forEach(t => {
+      const b = document.createElement("button");
+      b.className = "topic-btn";
+      b.innerHTML = `
+        <span>${t.label}</span>
+        <svg class="topic-arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 2l4 4-4 4"/>
+        </svg>
+      `;
+      b.onclick = () => selectTopic(t, cat.cat, cat.color);
+      body.appendChild(b);
+    });
+
+    h.onclick = () => {
+      const isOpen = body.classList.toggle("open");
+      h.querySelector(".cat-arr").classList.toggle("open", isOpen);
+    };
+
+    g.appendChild(h);
+    g.appendChild(body);
+    grid.appendChild(g);
+  });
+
+  noRes.style.display = any ? "none" : "block";
+}
+
+function filterTopics() {
+  buildGrid(document.getElementById("search-input").value);
+}
+
+function selectTopic(topic, catName, catColor) {
+  selected = {topic, catName, catColor};
+  if (topic.status === "dep" && topic.question) {
+    showContext(topic);
+  } else {
+    showResult(topic.status, topic.obs || null);
+  }
+}
+
+function showContext(topic) {
+  document.getElementById("ctx-question").textContent = topic.question;
+  const opts = document.getElementById("ctx-options");
+  opts.innerHTML = "";
+
+  topic.opts.forEach(o => {
+    const btn = document.createElement("button");
+    btn.className = "ctx-opt";
+    btn.innerHTML = `
+      <span>${o.label}</span>
+      <svg style="width:14px;height:14px;color:#9C9B95;flex-shrink:0" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 2l4 4-4 4"/>
+      </svg>
+    `;
+    btn.onclick = () => showResult(o.result, o.obs);
+    opts.appendChild(btn);
+  });
+
+  show("s-context");
+}
+
+function showResult(status, obs) {
+  const t = selected.topic;
+  const iconSim = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,7 5.5,10.5 12,3.5"/></svg>`;
+  const iconNao = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>`;
+  const iconDep = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5.5"/><line x1="7" y1="4.5" x2="7" y2="7.5"/><circle cx="7" cy="9.5" r=".6" fill="currentColor"/></svg>`;
+  const icons = {sim:iconSim, nao:iconNao, dep:iconDep};
+
+  const actionClass = status === "sim" ? "action-sim" : "action-nao";
+  const actionSVG = status === "sim"
+    ? `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l4.5 4.5L15 5"/></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="6.5"/><line x1="6.5" y1="9" x2="11.5" y2="9"/></svg>`;
+
+  document.getElementById("result-wrap").innerHTML = `
+    <div class="result-top">
+      <span class="res-badge res-${status}">${icons[status]} ${badgeLabel[status]}</span>
+      <div class="res-topic">${t.label}</div>
+      <div class="res-cat">${selected.catName}</div>
+    </div>
+    <div class="result-body">
+      <div class="res-section">
+        <div class="res-label">Ação recomendada</div>
+        <div class="action-banner ${actionClass}">
+          <div class="action-icon">${actionSVG}</div>
+          <div class="action-body">
+            <div class="action-title">${actionTitle[status] || "Avalie o contexto"}</div>
+            <div class="action-desc">${actionDesc[status] || ""}</div>
+          </div>
+        </div>
+      </div>
+      ${obs ? `
+      <div class="res-section">
+        <div class="res-label">Contexto e observações</div>
+        <div class="res-obs">${obs}</div>
+      </div>` : ""}
+      ${t.obs && !obs ? `
+      <div class="res-section">
+        <div class="res-label">Observações</div>
+        <div class="res-obs">${t.obs}</div>
+      </div>` : ""}
+    </div>
+    <div class="result-footer">
+      <button class="btn-new" onclick="restart()">Novo chamado</button>
+    </div>
+  `;
+
+  show("s-result");
+}
+
+function show(id) {
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function goBack() { show("s-topic"); }
+
+function restart() {
+  document.getElementById("search-input").value = "";
+  buildGrid("");
+  show("s-topic");
+}
+
+buildGrid("");
+</script>
+</body>
+</html>
